@@ -138,8 +138,8 @@ const ImageConverterApp: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full bg-slate-900 text-white font-sans overflow-hidden">
-            <div className="flex-grow p-4 overflow-y-auto flex flex-col items-center gap-4">
-                <div className="w-full max-w-xl aspect-video relative select-none rounded-md overflow-hidden bg-black/20" onContextMenu={(e) => e.stopPropagation() }>
+            <div className="flex-grow p-4 flex flex-col gap-4 overflow-hidden">
+                <div className="flex-grow relative select-none rounded-md overflow-hidden bg-black/20" onContextMenu={(e) => e.stopPropagation() }>
                      <img src={originalDataUrl ?? ''} className="absolute top-0 left-0 w-full h-full object-contain" alt="Original" />
                      {convertedDataUrl && (
                         <div className="absolute top-0 left-0 w-full h-full bg-no-repeat bg-contain bg-center" style={{ backgroundImage: `url(${convertedDataUrl})`, clipPath: `inset(0 0 0 ${comparison}%)` }} />
@@ -151,7 +151,7 @@ const ImageConverterApp: React.FC = () => {
                         aria-label="Comparison slider"
                      />
                 </div>
-                <div className="grid grid-cols-2 gap-4 w-full max-w-xl text-sm">
+                <div className="grid grid-cols-2 gap-4 w-full max-w-xl text-sm self-center flex-shrink-0">
                     <div className="bg-slate-800 p-3 rounded-lg text-center">
                         <p className="font-bold text-slate-300">Original</p>
                         <p className="text-lg text-white">{formatBytes(originalFile.size)}</p>
@@ -165,7 +165,7 @@ const ImageConverterApp: React.FC = () => {
                 </div>
             </div>
             
-            <footer className="p-3 border-t border-slate-700 bg-slate-800/50 flex items-center justify-center gap-6 flex-wrap">
+            <footer className="p-3 border-t border-slate-700 bg-slate-800/50 flex items-center justify-center gap-6 flex-wrap flex-shrink-0">
                 <div className="flex items-center gap-2">
                     <label htmlFor="format-select" className="text-sm font-medium">Format:</label>
                     <select id="format-select" value={format} onChange={(e) => setFormat(e.target.value as any)} className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">

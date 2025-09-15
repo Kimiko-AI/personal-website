@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { AppDefinition, WindowInstance, AppID } from './types';
 import Window from './components/Window';
 import Taskbar from './components/Taskbar';
@@ -6,20 +6,53 @@ import ContextMenu, { ContextMenuAction } from './components/ContextMenu';
 import NotesApp from './apps/NotesApp';
 import ClockApp from './apps/ClockApp';
 import ImageConverterApp from './apps/ImageConverterApp';
-import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon } from './constants';
+import SettingsApp from './apps/SettingsApp';
+import WeatherApp from './apps/WeatherApp';
+import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon, SettingsIcon, WeatherIcon } from './constants';
 
 const APPS: AppDefinition[] = [
   { id: 'notes', name: 'Notes', icon: <NotesIcon className="text-yellow-300" />, component: NotesApp },
   { id: 'clock', name: 'Clock', icon: <ClockIcon className="text-sky-300" />, component: ClockApp },
   { id: 'imageConverter', name: 'Image Converter', icon: <ImageIcon className="text-purple-400" />, component: ImageConverterApp },
+  { id: 'weather', name: 'Weather', icon: <WeatherIcon className="text-blue-300" />, component: WeatherApp },
+  { id: 'settings', name: 'Settings', icon: <SettingsIcon className="text-slate-400" />, component: SettingsApp },
 ];
+
+const DEFAULT_BACKGROUND_CLASSES = 'bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900';
+const BACKGROUND_STORAGE_KEY = 'web-desktop-background';
 
 const App: React.FC = () => {
   const [windows, setWindows] = useState<WindowInstance[]>([]);
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+  const [backgroundStyle, setBackgroundStyle] = useState<React.CSSProperties>({});
+  const [backgroundClasses, setBackgroundClasses] = useState(DEFAULT_BACKGROUND_CLASSES);
   const nextZIndex = useRef(10);
   
+  useEffect(() => {
+    const updateBackground = () => {
+        const storedBackground = localStorage.getItem(BACKGROUND_STORAGE_KEY);
+        if (storedBackground) {
+            setBackgroundStyle({
+                backgroundImage: storedBackground,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            });
+            setBackgroundClasses('');
+        } else {
+            setBackgroundStyle({});
+            setBackgroundClasses(DEFAULT_BACKGROUND_CLASSES);
+        }
+    };
+
+    updateBackground();
+
+    window.addEventListener('storage', updateBackground);
+    return () => {
+        window.removeEventListener('storage', updateBackground);
+    };
+  }, []);
+
   const closeMenus = useCallback(() => {
     setIsStartMenuOpen(false);
     setContextMenu(null);
@@ -41,7 +74,7 @@ const App: React.FC = () => {
       x: Math.random() * 200 + 50,
       y: Math.random() * 100 + 50,
       width: appDef.id === 'imageConverter' ? 640 : 500,
-      height: appDef.id === 'imageConverter' ? 500 : 350,
+      height: appDef.id === 'imageConverter' ? 500 : 400,
       zIndex: nextZIndex.current++,
       isMinimized: false,
     };
@@ -120,14 +153,16 @@ const App: React.FC = () => {
   };
 
   const contextMenuActions: ContextMenuAction[] = [
+    { label: 'Settings', action: () => openApp('settings'), icon: <SettingsIcon className="text-slate-400" /> },
     { label: 'Take Screenshot', action: takeScreenshot, icon: <ScreenshotIcon className="text-green-400" /> },
+    { label: 'Open Weather', action: () => openApp('weather'), icon: <WeatherIcon className="text-blue-300" /> },
     { label: 'Open Notes', action: () => openApp('notes'), icon: <NotesIcon className="text-yellow-300" /> },
     { label: 'Open Clock', action: () => openApp('clock'), icon: <ClockIcon className="text-sky-300" /> },
     { label: 'Image Converter', action: () => openApp('imageConverter'), icon: <ImageIcon className="text-purple-400" /> },
   ];
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 font-sans select-none">
+    <div className={`h-screen w-screen overflow-hidden font-sans select-none ${backgroundClasses}`} style={backgroundStyle}>
       <main className="w-full h-full" onClick={closeMenus} onContextMenu={handleContextMenu}>
         {windows.map(win => {
           const app = APPS.find(a => a.id === win.appId);
