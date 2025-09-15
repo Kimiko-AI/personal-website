@@ -17,6 +17,8 @@ const Window: React.FC<WindowProps> = ({ instance, app, onClose, onMinimize, onF
   const [isResizing, setIsResizing] = useState<string | null>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const windowRef = useRef<HTMLDivElement>(null);
+  const lastPosition = useRef({ x: 0, y: 0 });
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     onFocus(instance.id);
@@ -25,6 +27,7 @@ const Window: React.FC<WindowProps> = ({ instance, app, onClose, onMinimize, onF
       x: e.clientX - instance.x,
       y: e.clientY - instance.y,
     };
+    lastPosition.current = { x: instance.x, y: instance.y };
     e.preventDefault();
   }, [instance.id, instance.x, instance.y, onFocus]);
   
@@ -44,10 +47,14 @@ const Window: React.FC<WindowProps> = ({ instance, app, onClose, onMinimize, onF
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
-        onMove(instance.id, {
-          x: e.clientX - dragOffset.current.x,
-          y: e.clientY - dragOffset.current.y,
-        });
+        const newX = e.clientX - dragOffset.current.x;
+        const newY = e.clientY - dragOffset.current.y;
+        lastPosition.current = { x: newX, y: newY };
+        
+        if (windowRef.current) {
+            // Bypass React state updates for smooth, direct manipulation
+            windowRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
+        }
       } else if (isResizing) {
           let newWidth = resizeStart.current.width;
           let newHeight = resizeStart.current.height;
@@ -72,6 +79,10 @@ const Window: React.FC<WindowProps> = ({ instance, app, onClose, onMinimize, onF
     };
 
     const handleMouseUp = () => {
+      if (isDragging) {
+        // Sync final position with React state
+        onMove(instance.id, lastPosition.current);
+      }
       setIsDragging(false);
       setIsResizing(null);
     };
@@ -93,7 +104,8 @@ const Window: React.FC<WindowProps> = ({ instance, app, onClose, onMinimize, onF
 
   return (
     <div
-      className={`absolute flex flex-col bg-slate-700 border border-slate-500/50 rounded-lg shadow-2xl shadow-black/50 overflow-hidden ${visibilityClasses} ${isResizing ? '' : transitionClasses}`}
+      ref={windowRef}
+      className={`absolute flex flex-col bg-slate-700 border border-slate-500/50 rounded-lg shadow-2xl shadow-black/50 overflow-hidden ${visibilityClasses} ${isDragging || isResizing ? '' : transitionClasses}`}
       style={{
         transform: `translate(${instance.x}px, ${instance.y}px)`,
         width: instance.width,

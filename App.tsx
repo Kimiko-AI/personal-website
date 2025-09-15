@@ -87,15 +87,31 @@ const App: React.FC = () => {
   }, []);
 
   const focusWindow = useCallback((id: string) => {
-    setWindows(prev => 
-      prev.map(win => {
+    setWindows(prev => {
+      let targetWin: WindowInstance | null = null;
+      let maxZ = 0;
+      for (const win of prev) {
+        if (win.zIndex > maxZ) {
+          maxZ = win.zIndex;
+        }
         if (win.id === id) {
-          const newZIndex = win.zIndex < nextZIndex.current - 1 ? nextZIndex.current++ : win.zIndex;
-          return { ...win, zIndex: newZIndex, isMinimized: false };
+          targetWin = win;
+        }
+      }
+
+      // If window is already on top and not minimized, do nothing.
+      if (targetWin && targetWin.zIndex === maxZ && !targetWin.isMinimized) {
+        return prev;
+      }
+
+      // Otherwise, create a new array with the target window on top.
+      return prev.map(win => {
+        if (win.id === id) {
+          return { ...win, zIndex: nextZIndex.current++, isMinimized: false };
         }
         return win;
-      })
-    );
+      });
+    });
   }, []);
   
   const minimizeWindow = useCallback((id: string) => {

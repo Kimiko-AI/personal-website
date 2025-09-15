@@ -34,8 +34,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, actions, onClose }) => 
   }, [x, y]);
 
   const handleActionClick = (action: () => void) => {
-    onClose();
+    // Call action() before onClose() to ensure that security-sensitive
+    // browser APIs (like getDisplayMedia) are still considered
+    // user-initiated.
     action();
+    onClose();
   };
 
   return (
