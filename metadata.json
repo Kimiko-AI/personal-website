@@ -1,0 +1,5 @@
+{
+  "name": "Web Desktop Environment",
+  "description": "A simple, minimal, and elegant web-based desktop environment with a start menu, note-taking app, and a clock app, built with React and Tailwind CSS.",
+  "requestFramePermissions": []
+}
