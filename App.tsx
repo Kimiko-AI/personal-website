@@ -8,13 +8,15 @@ import ClockApp from './apps/ClockApp';
 import ImageConverterApp from './apps/ImageConverterApp';
 import SettingsApp from './apps/SettingsApp';
 import WeatherApp from './apps/WeatherApp';
-import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon, SettingsIcon, WeatherIcon } from './constants';
+import TerminalApp from './apps/TerminalApp';
+import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon, SettingsIcon, WeatherIcon, TerminalIcon } from './constants';
 
 const APPS: AppDefinition[] = [
   { id: 'notes', name: 'Notes', icon: <NotesIcon className="text-yellow-300" />, component: NotesApp },
   { id: 'clock', name: 'Clock', icon: <ClockIcon className="text-sky-300" />, component: ClockApp },
   { id: 'imageConverter', name: 'Image Converter', icon: <ImageIcon className="text-purple-400" />, component: ImageConverterApp },
   { id: 'weather', name: 'Weather', icon: <WeatherIcon className="text-blue-300" />, component: WeatherApp },
+  { id: 'terminal', name: 'Terminal', icon: <TerminalIcon className="text-green-400" />, component: TerminalApp },
   { id: 'settings', name: 'Settings', icon: <SettingsIcon className="text-slate-400" />, component: SettingsApp },
 ];
 
@@ -68,13 +70,29 @@ const App: React.FC = () => {
     const appDef = APPS.find(app => app.id === appId);
     if (!appDef) return;
 
+    const getWidth = () => {
+        switch(appId) {
+            case 'imageConverter': return 640;
+            case 'terminal': return 900;
+            default: return 500;
+        }
+    }
+
+    const getHeight = () => {
+        switch(appId) {
+            case 'imageConverter': return 500;
+            case 'terminal': return 600;
+            default: return 400;
+        }
+    }
+
     const newWindow: WindowInstance = {
       id: `${appId}-${Date.now()}`,
       appId: appId,
       x: Math.random() * 200 + 50,
       y: Math.random() * 100 + 50,
-      width: appDef.id === 'imageConverter' ? 640 : 500,
-      height: appDef.id === 'imageConverter' ? 500 : 400,
+      width: getWidth(),
+      height: getHeight(),
       zIndex: nextZIndex.current++,
       isMinimized: false,
     };
@@ -172,6 +190,7 @@ const App: React.FC = () => {
     { label: 'Settings', action: () => openApp('settings'), icon: <SettingsIcon className="text-slate-400" /> },
     { label: 'Take Screenshot', action: takeScreenshot, icon: <ScreenshotIcon className="text-green-400" /> },
     { label: 'Open Weather', action: () => openApp('weather'), icon: <WeatherIcon className="text-blue-300" /> },
+    { label: 'Open Terminal', action: () => openApp('terminal'), icon: <TerminalIcon className="text-green-400" /> },
     { label: 'Open Notes', action: () => openApp('notes'), icon: <NotesIcon className="text-yellow-300" /> },
     { label: 'Open Clock', action: () => openApp('clock'), icon: <ClockIcon className="text-sky-300" /> },
     { label: 'Image Converter', action: () => openApp('imageConverter'), icon: <ImageIcon className="text-purple-400" /> },
