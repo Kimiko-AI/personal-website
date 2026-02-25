@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import type { AppDefinition, WindowInstance, AppID } from './types';
+import React, { useState, useCallback, useEffect } from 'react';
+import type { AppDefinition, AppID } from './types';
 import Window from './components/Window';
 import Taskbar from './components/Taskbar';
 import ContextMenu, { ContextMenuAction } from './components/ContextMenu';
@@ -9,7 +9,10 @@ import ImageConverterApp from './apps/ImageConverterApp';
 import SettingsApp from './apps/SettingsApp';
 import WeatherApp from './apps/WeatherApp';
 import TerminalApp from './apps/TerminalApp';
-import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon, SettingsIcon, WeatherIcon, TerminalIcon } from './constants';
+import TicTacToeApp from './apps/games/TicTacToeApp';
+import SnakeApp from './apps/games/SnakeApp';
+import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon, SettingsIcon, WeatherIcon, TerminalIcon, GamepadIcon } from './constants';
+import { useWindowManager } from './hooks/useWindowManager';
 
 const APPS: AppDefinition[] = [
   { id: 'notes', name: 'Notes', icon: <NotesIcon className="text-yellow-300" />, component: NotesApp },
@@ -18,18 +21,29 @@ const APPS: AppDefinition[] = [
   { id: 'weather', name: 'Weather', icon: <WeatherIcon className="text-blue-300" />, component: WeatherApp },
   { id: 'terminal', name: 'Terminal', icon: <TerminalIcon className="text-green-400" />, component: TerminalApp },
   { id: 'settings', name: 'Settings', icon: <SettingsIcon className="text-slate-400" />, component: SettingsApp },
+  { id: 'tictactoe', name: 'Tic Tac Toe', icon: <GamepadIcon className="text-pink-400" />, component: TicTacToeApp },
+  { id: 'snake', name: 'Snake', icon: <GamepadIcon className="text-green-500" />, component: SnakeApp },
 ];
 
 const DEFAULT_BACKGROUND_CLASSES = 'bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900';
 const BACKGROUND_STORAGE_KEY = 'web-desktop-background';
 
 const App: React.FC = () => {
-  const [windows, setWindows] = useState<WindowInstance[]>([]);
+  const {
+    windows,
+    openApp,
+    closeWindow,
+    focusWindow,
+    minimizeWindow,
+    maximizeWindow,
+    moveWindow,
+    resizeWindow,
+  } = useWindowManager(APPS);
+
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [backgroundStyle, setBackgroundStyle] = useState<React.CSSProperties>({});
   const [backgroundClasses, setBackgroundClasses] = useState(DEFAULT_BACKGROUND_CLASSES);
-  const nextZIndex = useRef(10);
   
   useEffect(() => {
     const updateBackground = () => {
@@ -60,95 +74,10 @@ const App: React.FC = () => {
     setContextMenu(null);
   }, []);
 
-  const openApp = useCallback((appId: AppID) => {
-    const existingWindow = windows.find(win => win.appId === appId && win.isMinimized);
-    if (existingWindow) {
-      focusWindow(existingWindow.id);
-      return;
-    }
-
-    const appDef = APPS.find(app => app.id === appId);
-    if (!appDef) return;
-
-    const getWidth = () => {
-        switch(appId) {
-            case 'imageConverter': return 640;
-            case 'terminal': return 900;
-            default: return 500;
-        }
-    }
-
-    const getHeight = () => {
-        switch(appId) {
-            case 'imageConverter': return 500;
-            case 'terminal': return 600;
-            default: return 400;
-        }
-    }
-
-    const newWindow: WindowInstance = {
-      id: `${appId}-${Date.now()}`,
-      appId: appId,
-      x: Math.random() * 200 + 50,
-      y: Math.random() * 100 + 50,
-      width: getWidth(),
-      height: getHeight(),
-      zIndex: nextZIndex.current++,
-      isMinimized: false,
-    };
-    setWindows(prev => [...prev, newWindow]);
+  const handleOpenApp = useCallback((appId: AppID) => {
+    openApp(appId);
     closeMenus();
-  }, [windows, closeMenus]);
-
-  const closeWindow = useCallback((id: string) => {
-    setWindows(prev => prev.filter(win => win.id !== id));
-  }, []);
-
-  const focusWindow = useCallback((id: string) => {
-    setWindows(prev => {
-      let targetWin: WindowInstance | null = null;
-      let maxZ = 0;
-      for (const win of prev) {
-        if (win.zIndex > maxZ) {
-          maxZ = win.zIndex;
-        }
-        if (win.id === id) {
-          targetWin = win;
-        }
-      }
-
-      // If window is already on top and not minimized, do nothing.
-      if (targetWin && targetWin.zIndex === maxZ && !targetWin.isMinimized) {
-        return prev;
-      }
-
-      // Otherwise, create a new array with the target window on top.
-      return prev.map(win => {
-        if (win.id === id) {
-          return { ...win, zIndex: nextZIndex.current++, isMinimized: false };
-        }
-        return win;
-      });
-    });
-  }, []);
-  
-  const minimizeWindow = useCallback((id: string) => {
-    setWindows(prev => 
-      prev.map(win => win.id === id ? { ...win, isMinimized: true } : win)
-    );
-  }, []);
-
-  const moveWindow = useCallback((id: string, newPos: { x: number; y: number }) => {
-    setWindows(prev =>
-      prev.map(win => (win.id === id ? { ...win, x: newPos.x, y: newPos.y } : win))
-    );
-  }, []);
-  
-  const resizeWindow = useCallback((id: string, newSize: { width: number; height: number }) => {
-    setWindows(prev =>
-        prev.map(win => (win.id === id ? { ...win, width: newSize.width, height: newSize.height } : win))
-    );
-  }, []);
+  }, [openApp, closeMenus]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -158,8 +87,6 @@ const App: React.FC = () => {
 
   const takeScreenshot = async () => {
     try {
-        // Fix: Cast video constraints to 'any' to allow the 'cursor' property,
-        // which is valid for getDisplayMedia but may not be in the default TS types.
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" } as any, audio: false });
         const video = document.createElement('video');
         
@@ -187,18 +114,20 @@ const App: React.FC = () => {
   };
 
   const contextMenuActions: ContextMenuAction[] = [
-    { label: 'Settings', action: () => openApp('settings'), icon: <SettingsIcon className="text-slate-400" /> },
+    { label: 'Settings', action: () => handleOpenApp('settings'), icon: <SettingsIcon className="text-slate-400" /> },
     { label: 'Take Screenshot', action: takeScreenshot, icon: <ScreenshotIcon className="text-green-400" /> },
-    { label: 'Open Weather', action: () => openApp('weather'), icon: <WeatherIcon className="text-blue-300" /> },
-    { label: 'Open Terminal', action: () => openApp('terminal'), icon: <TerminalIcon className="text-green-400" /> },
-    { label: 'Open Notes', action: () => openApp('notes'), icon: <NotesIcon className="text-yellow-300" /> },
-    { label: 'Open Clock', action: () => openApp('clock'), icon: <ClockIcon className="text-sky-300" /> },
-    { label: 'Image Converter', action: () => openApp('imageConverter'), icon: <ImageIcon className="text-purple-400" /> },
+    { label: 'Open Weather', action: () => handleOpenApp('weather'), icon: <WeatherIcon className="text-blue-300" /> },
+    { label: 'Open Terminal', action: () => handleOpenApp('terminal'), icon: <TerminalIcon className="text-green-400" /> },
+    { label: 'Open Notes', action: () => handleOpenApp('notes'), icon: <NotesIcon className="text-yellow-300" /> },
+    { label: 'Open Clock', action: () => handleOpenApp('clock'), icon: <ClockIcon className="text-sky-300" /> },
+    { label: 'Image Converter', action: () => handleOpenApp('imageConverter'), icon: <ImageIcon className="text-purple-400" /> },
+    { label: 'Tic Tac Toe', action: () => handleOpenApp('tictactoe'), icon: <GamepadIcon className="text-pink-400" /> },
+    { label: 'Snake', action: () => handleOpenApp('snake'), icon: <GamepadIcon className="text-green-500" /> },
   ];
 
   return (
-    <div className={`h-screen w-screen overflow-hidden font-sans select-none ${backgroundClasses}`} style={backgroundStyle}>
-      <main className="w-full h-full" onClick={closeMenus} onContextMenu={handleContextMenu}>
+    <div className={`h-screen w-screen overflow-hidden font-sans select-none relative ${backgroundClasses}`} style={backgroundStyle}>
+      <main className="w-full h-full relative" onClick={closeMenus} onContextMenu={handleContextMenu}>
         {windows.map(win => {
           const app = APPS.find(a => a.id === win.appId);
           if (!app) return null;
@@ -209,6 +138,7 @@ const App: React.FC = () => {
               app={app}
               onClose={closeWindow}
               onMinimize={minimizeWindow}
+              onMaximize={maximizeWindow}
               onFocus={focusWindow}
               onMove={moveWindow}
               onResize={resizeWindow}
@@ -227,7 +157,7 @@ const App: React.FC = () => {
       <Taskbar
         apps={APPS}
         openWindows={windows}
-        onAppLaunch={openApp}
+        onAppLaunch={handleOpenApp}
         onWindowFocus={focusWindow}
         isStartMenuOpen={isStartMenuOpen}
         onStartMenuToggle={() => setIsStartMenuOpen(prev => !prev)}

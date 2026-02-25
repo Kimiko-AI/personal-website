@@ -45,7 +45,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, actions, onClose }) => 
     <div
       ref={menuRef}
       className="absolute w-56 bg-slate-800/80 backdrop-blur-lg border border-slate-500/50 rounded-lg shadow-lg p-1 z-[9999]"
-      style={position}
+      style={{ top: `${position.top}px`, left: `${position.left}px` }}
     >
       <ul>
         {actions.map((item) => (

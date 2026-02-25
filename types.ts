@@ -1,6 +1,6 @@
 import type React from 'react';
 
-export type AppID = 'notes' | 'clock' | 'imageConverter' | 'noSleep' | 'settings' | 'weather' | 'terminal';
+export type AppID = 'notes' | 'clock' | 'imageConverter' | 'noSleep' | 'settings' | 'weather' | 'terminal' | 'tictactoe' | 'snake';
 
 export interface AppDefinition {
   id: AppID;
@@ -18,4 +18,5 @@ export interface WindowInstance {
   height: number;
   zIndex: number;
   isMinimized: boolean;
+  isMaximized?: boolean;
 }
