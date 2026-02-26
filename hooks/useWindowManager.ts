@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import type { AppDefinition, WindowInstance, AppID } from '../types';
+import { APP_WINDOW_SIZES, DEFAULT_WINDOW_SIZE } from '../appRegistry';
 
-export const useWindowManager = (APPS: AppDefinition[]) => {
+export const useWindowManager = (APPS: AppDefinition[], isMobile: boolean) => {
   const [windows, setWindows] = useState<WindowInstance[]>([]);
   const nextZIndex = useRef(10);
 
@@ -15,39 +16,45 @@ export const useWindowManager = (APPS: AppDefinition[]) => {
     const appDef = APPS.find(app => app.id === appId);
     if (!appDef) return;
 
-    const getWidth = () => {
-        switch(appId) {
-            case 'imageConverter': return 640;
-            case 'terminal': return 900;
-            case 'snake': return 500;
-            case 'tictactoe': return 400;
-            default: return 500;
-        }
+    const { innerWidth, innerHeight } = window;
+    const taskbarHeight = isMobile ? 56 : 48;
+
+    let newWindow: WindowInstance;
+
+    if (isMobile) {
+      // On mobile, always open maximized
+      newWindow = {
+        id: `${appId}-${Date.now()}`,
+        appId: appId,
+        x: 0,
+        y: 0,
+        width: innerWidth,
+        height: innerHeight - taskbarHeight,
+        zIndex: nextZIndex.current++,
+        isMinimized: false,
+        isMaximized: true,
+      };
+    } else {
+      // Desktop: use app-specific sizes with random offset
+      const sizes = APP_WINDOW_SIZES[appId] || DEFAULT_WINDOW_SIZE;
+      const maxX = Math.max(0, innerWidth - sizes.width - 50);
+      const maxY = Math.max(0, innerHeight - taskbarHeight - sizes.height - 50);
+
+      newWindow = {
+        id: `${appId}-${Date.now()}`,
+        appId: appId,
+        x: Math.random() * Math.min(200, maxX) + 50,
+        y: Math.random() * Math.min(100, maxY) + 50,
+        width: Math.min(sizes.width, innerWidth - 20),
+        height: Math.min(sizes.height, innerHeight - taskbarHeight - 20),
+        zIndex: nextZIndex.current++,
+        isMinimized: false,
+        isMaximized: false,
+      };
     }
 
-    const getHeight = () => {
-        switch(appId) {
-            case 'imageConverter': return 500;
-            case 'terminal': return 600;
-            case 'snake': return 600;
-            case 'tictactoe': return 500;
-            default: return 400;
-        }
-    }
-
-    const newWindow: WindowInstance = {
-      id: `${appId}-${Date.now()}`,
-      appId: appId,
-      x: Math.random() * 200 + 50,
-      y: Math.random() * 100 + 50,
-      width: getWidth(),
-      height: getHeight(),
-      zIndex: nextZIndex.current++,
-      isMinimized: false,
-      isMaximized: false,
-    };
     setWindows(prev => [...prev, newWindow]);
-  }, [windows, APPS]);
+  }, [windows, APPS, isMobile]);
 
   const closeWindow = useCallback((id: string) => {
     setWindows(prev => prev.filter(win => win.id !== id));
@@ -58,12 +65,8 @@ export const useWindowManager = (APPS: AppDefinition[]) => {
       let targetWin: WindowInstance | null = null;
       let maxZ = 0;
       for (const win of prev) {
-        if (win.zIndex > maxZ) {
-          maxZ = win.zIndex;
-        }
-        if (win.id === id) {
-          targetWin = win;
-        }
+        if (win.zIndex > maxZ) maxZ = win.zIndex;
+        if (win.id === id) targetWin = win;
       }
 
       if (targetWin && targetWin.zIndex === maxZ && !targetWin.isMinimized) {
@@ -78,15 +81,15 @@ export const useWindowManager = (APPS: AppDefinition[]) => {
       });
     });
   }, []);
-  
+
   const minimizeWindow = useCallback((id: string) => {
-    setWindows(prev => 
+    setWindows(prev =>
       prev.map(win => win.id === id ? { ...win, isMinimized: true } : win)
     );
   }, []);
 
   const maximizeWindow = useCallback((id: string) => {
-    setWindows(prev => 
+    setWindows(prev =>
       prev.map(win => win.id === id ? { ...win, isMaximized: !win.isMaximized, isMinimized: false } : win)
     );
   }, []);
@@ -96,10 +99,10 @@ export const useWindowManager = (APPS: AppDefinition[]) => {
       prev.map(win => (win.id === id ? { ...win, x: newPos.x, y: newPos.y } : win))
     );
   }, []);
-  
+
   const resizeWindow = useCallback((id: string, newSize: { width: number; height: number }) => {
     setWindows(prev =>
-        prev.map(win => (win.id === id ? { ...win, width: newSize.width, height: newSize.height } : win))
+      prev.map(win => (win.id === id ? { ...win, width: newSize.width, height: newSize.height } : win))
     );
   }, []);
 

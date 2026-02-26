@@ -1,34 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import type { AppDefinition, AppID } from './types';
+import React, { useState, useCallback } from 'react';
+import type { AppID } from './types';
 import Window from './components/Window';
 import Taskbar from './components/Taskbar';
 import ContextMenu, { ContextMenuAction } from './components/ContextMenu';
-import NotesApp from './apps/NotesApp';
-import ClockApp from './apps/ClockApp';
-import ImageConverterApp from './apps/ImageConverterApp';
-import SettingsApp from './apps/SettingsApp';
-import WeatherApp from './apps/WeatherApp';
-import TerminalApp from './apps/TerminalApp';
-import TicTacToeApp from './apps/games/TicTacToeApp';
-import SnakeApp from './apps/games/SnakeApp';
-import { NotesIcon, ClockIcon, ScreenshotIcon, ImageIcon, SettingsIcon, WeatherIcon, TerminalIcon, GamepadIcon } from './constants';
+import { APPS } from './appRegistry';
+import { ScreenshotIcon, SettingsIcon, WeatherIcon, TerminalIcon, NotesIcon, ClockIcon, ImageIcon, GamepadIcon } from './constants';
 import { useWindowManager } from './hooks/useWindowManager';
-
-const APPS: AppDefinition[] = [
-  { id: 'notes', name: 'Notes', icon: <NotesIcon className="text-yellow-300" />, component: NotesApp },
-  { id: 'clock', name: 'Clock', icon: <ClockIcon className="text-sky-300" />, component: ClockApp },
-  { id: 'imageConverter', name: 'Image Converter', icon: <ImageIcon className="text-purple-400" />, component: ImageConverterApp },
-  { id: 'weather', name: 'Weather', icon: <WeatherIcon className="text-blue-300" />, component: WeatherApp },
-  { id: 'terminal', name: 'Terminal', icon: <TerminalIcon className="text-green-400" />, component: TerminalApp },
-  { id: 'settings', name: 'Settings', icon: <SettingsIcon className="text-slate-400" />, component: SettingsApp },
-  { id: 'tictactoe', name: 'Tic Tac Toe', icon: <GamepadIcon className="text-pink-400" />, component: TicTacToeApp },
-  { id: 'snake', name: 'Snake', icon: <GamepadIcon className="text-green-500" />, component: SnakeApp },
-];
-
-const DEFAULT_BACKGROUND_CLASSES = 'bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900';
-const BACKGROUND_STORAGE_KEY = 'web-desktop-background';
+import { useDesktopBackground } from './hooks/useDesktopBackground';
+import { useIsMobile } from './hooks/useIsMobile';
 
 const App: React.FC = () => {
+  const isMobile = useIsMobile();
+  const { backgroundStyle, backgroundClasses } = useDesktopBackground();
+
   const {
     windows,
     openApp,
@@ -38,36 +22,10 @@ const App: React.FC = () => {
     maximizeWindow,
     moveWindow,
     resizeWindow,
-  } = useWindowManager(APPS);
+  } = useWindowManager(APPS, isMobile);
 
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
-  const [backgroundStyle, setBackgroundStyle] = useState<React.CSSProperties>({});
-  const [backgroundClasses, setBackgroundClasses] = useState(DEFAULT_BACKGROUND_CLASSES);
-  
-  useEffect(() => {
-    const updateBackground = () => {
-        const storedBackground = localStorage.getItem(BACKGROUND_STORAGE_KEY);
-        if (storedBackground) {
-            setBackgroundStyle({
-                backgroundImage: storedBackground,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            });
-            setBackgroundClasses('');
-        } else {
-            setBackgroundStyle({});
-            setBackgroundClasses(DEFAULT_BACKGROUND_CLASSES);
-        }
-    };
-
-    updateBackground();
-
-    window.addEventListener('storage', updateBackground);
-    return () => {
-        window.removeEventListener('storage', updateBackground);
-    };
-  }, []);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const closeMenus = useCallback(() => {
     setIsStartMenuOpen(false);
@@ -80,6 +38,7 @@ const App: React.FC = () => {
   }, [openApp, closeMenus]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
+    if (isMobile) return; // No context menu on mobile
     e.preventDefault();
     closeMenus();
     setContextMenu({ x: e.clientX, y: e.clientY });
@@ -87,29 +46,29 @@ const App: React.FC = () => {
 
   const takeScreenshot = async () => {
     try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" } as any, audio: false });
-        const video = document.createElement('video');
-        
-        video.onloadedmetadata = () => {
-            video.play();
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const context = canvas.getContext('2d');
-            
-            setTimeout(() => {
-              context?.drawImage(video, 0, 0, canvas.width, canvas.height);
-              const dataUrl = canvas.toDataURL('image/png');
-              const a = document.createElement('a');
-              a.href = dataUrl;
-              a.download = `screenshot-${new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-')}.png`;
-              a.click();
-              stream.getTracks().forEach(track => track.stop());
-            }, 100);
-        };
-        video.srcObject = stream;
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" } as any, audio: false });
+      const video = document.createElement('video');
+
+      video.onloadedmetadata = () => {
+        video.play();
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+
+        setTimeout(() => {
+          context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = `screenshot-${new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-')}.png`;
+          a.click();
+          stream.getTracks().forEach(track => track.stop());
+        }, 100);
+      };
+      video.srcObject = stream;
     } catch (err) {
-        console.error("Screenshot failed:", err);
+      console.error("Screenshot failed:", err);
     }
   };
 
@@ -136,6 +95,7 @@ const App: React.FC = () => {
               key={win.id}
               instance={win}
               app={app}
+              isMobile={isMobile}
               onClose={closeWindow}
               onMinimize={minimizeWindow}
               onMaximize={maximizeWindow}
@@ -145,8 +105,8 @@ const App: React.FC = () => {
             />
           );
         })}
-        {contextMenu && (
-          <ContextMenu 
+        {contextMenu && !isMobile && (
+          <ContextMenu
             x={contextMenu.x}
             y={contextMenu.y}
             actions={contextMenuActions}
@@ -161,6 +121,7 @@ const App: React.FC = () => {
         onWindowFocus={focusWindow}
         isStartMenuOpen={isStartMenuOpen}
         onStartMenuToggle={() => setIsStartMenuOpen(prev => !prev)}
+        isMobile={isMobile}
       />
     </div>
   );

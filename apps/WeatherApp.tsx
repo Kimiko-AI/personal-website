@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// Interfaces for Open-Meteo API response
 interface CurrentWeather {
     temperature_2m: number;
     weather_code: number;
@@ -29,7 +28,6 @@ interface WeatherData {
     temperature_unit: string;
 }
 
-// Map WMO weather codes to icons and descriptions
 const WEATHER_CODES: Record<number, { description: string, icon: string }> = {
     0: { description: 'Clear sky', icon: '☀️' },
     1: { description: 'Mainly clear', icon: '🌤️' },
@@ -91,24 +89,24 @@ const WeatherApp: React.FC = () => {
                 setLoading(true);
                 setError(null);
                 const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(4)}&longitude=${longitude.toFixed(4)}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=celsius&timezone=auto`;
-                
+
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error('Could not retrieve weather data.');
                 }
                 const data = await response.json();
-                
+
                 if (!data.current || !data.hourly || !data.daily) {
                     throw new Error('Incomplete weather data received.');
                 }
-                
+
                 setWeatherData({
                     current: data.current,
                     hourly: data.hourly,
                     daily: data.daily,
                     temperature_unit: data.daily_units.temperature_2m_max.slice(-1)
                 });
-                
+
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -134,31 +132,31 @@ const WeatherApp: React.FC = () => {
             return <div className="flex items-center justify-center h-full"><p className="text-center text-slate-400">Fetching weather data...</p></div>;
         }
         if (error) {
-            return <div className="flex items-center justify-center h-full"><p className="text-center text-red-400 p-4">{error}</p></div>;
+            return <div className="flex items-center justify-center h-full p-4"><p className="text-center text-red-400">{error}</p></div>;
         }
         if (weatherData) {
             const { current, hourly, daily, temperature_unit } = weatherData;
             const currentHourIndex = hourly.time.findIndex(t => new Date(t) > new Date());
-            
+
             return (
-                <div className="p-4 space-y-6">
+                <div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
                     {/* Current Weather */}
                     <div className="text-center">
-                        <h2 className="text-2xl font-bold">{location || 'Current Location'}</h2>
-                        <div className="text-7xl my-2">{getWeatherInfo(current.weather_code).icon} {Math.round(current.temperature_2m)}°{temperature_unit}</div>
-                        <p className="text-xl text-slate-300">{getWeatherInfo(current.weather_code).description}</p>
-                        <p className="text-sm text-slate-400">Wind: {current.wind_speed_10m.toFixed(1)} km/h {current.wind_direction_10m}°</p>
+                        <h2 className="text-xl sm:text-2xl font-bold">{location || 'Current Location'}</h2>
+                        <div className="text-5xl sm:text-7xl my-2">{getWeatherInfo(current.weather_code).icon} {Math.round(current.temperature_2m)}°{temperature_unit}</div>
+                        <p className="text-lg sm:text-xl text-slate-300">{getWeatherInfo(current.weather_code).description}</p>
+                        <p className="text-xs sm:text-sm text-slate-400">Wind: {current.wind_speed_10m.toFixed(1)} km/h {current.wind_direction_10m}°</p>
                     </div>
 
                     {/* Hourly Forecast */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-2 px-2">Next 24 Hours</h3>
-                        <div className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2 px-1">Next 24 Hours</h3>
+                        <div className="flex overflow-x-auto gap-2 pb-2 -mx-3 px-3 sm:-mx-4 sm:px-4">
                             {hourly.time.slice(currentHourIndex, currentHourIndex + 24).map((time, index) => (
-                                <div key={time} className="flex-shrink-0 w-20 bg-slate-800 p-3 rounded-lg text-center">
-                                    <p className="font-bold text-sm">{new Date(time).toLocaleTimeString([], { hour: 'numeric', hour12: true })}</p>
-                                    <p className="text-3xl my-1">{getWeatherInfo(hourly.weather_code[currentHourIndex + index]).icon}</p>
-                                    <p className="text-lg font-semibold">{Math.round(hourly.temperature_2m[currentHourIndex + index])}°</p>
+                                <div key={time} className="flex-shrink-0 w-16 sm:w-20 bg-slate-800 p-2 sm:p-3 rounded-lg text-center">
+                                    <p className="font-bold text-xs sm:text-sm">{new Date(time).toLocaleTimeString([], { hour: 'numeric', hour12: true })}</p>
+                                    <p className="text-2xl sm:text-3xl my-1">{getWeatherInfo(hourly.weather_code[currentHourIndex + index]).icon}</p>
+                                    <p className="text-sm sm:text-lg font-semibold">{Math.round(hourly.temperature_2m[currentHourIndex + index])}°</p>
                                 </div>
                             ))}
                         </div>
@@ -166,17 +164,17 @@ const WeatherApp: React.FC = () => {
 
                     {/* Daily Forecast */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-2 px-2">7-Day Forecast</h3>
-                        <div className="space-y-2">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2 px-1">7-Day Forecast</h3>
+                        <div className="space-y-1.5 sm:space-y-2">
                             {daily.time.map((date, index) => (
-                                <div key={date} className="flex items-center justify-between bg-slate-800 p-2 rounded-lg">
-                                    <p className="font-bold w-1/4">{new Date(date).toLocaleDateString([], { weekday: 'long' })}</p>
+                                <div key={date} className="flex items-center justify-between bg-slate-800 p-2 rounded-lg text-sm sm:text-base">
+                                    <p className="font-bold w-1/4 truncate">{new Date(date).toLocaleDateString([], { weekday: 'short' })}</p>
 
-                                    <div className="flex items-center gap-2 w-1/2 justify-center">
-                                      <span className="text-2xl">{getWeatherInfo(daily.weather_code[index]).icon}</span>
-                                      <p className="text-sm text-slate-300 hidden sm:block">{getWeatherInfo(daily.weather_code[index]).description}</p>
+                                    <div className="flex items-center gap-1 sm:gap-2 w-1/2 justify-center">
+                                        <span className="text-xl sm:text-2xl">{getWeatherInfo(daily.weather_code[index]).icon}</span>
+                                        <p className="text-xs sm:text-sm text-slate-300 hidden sm:block truncate">{getWeatherInfo(daily.weather_code[index]).description}</p>
                                     </div>
-                                    <p className="font-semibold w-1/4 text-right">
+                                    <p className="font-semibold w-1/4 text-right text-sm sm:text-base">
                                         {Math.round(daily.temperature_2m_max[index])}°
                                         <span className="text-slate-400"> / {Math.round(daily.temperature_2m_min[index])}°</span>
                                     </p>

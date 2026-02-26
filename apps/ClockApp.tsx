@@ -14,10 +14,10 @@ const ClockView: React.FC = () => {
 
     return (
         <div className="text-center">
-            <div className="text-7xl font-mono tracking-widest">
+            <div className="text-4xl sm:text-7xl font-mono tracking-widest">
                 {time.toLocaleTimeString()}
             </div>
-            <div className="text-xl text-slate-400 mt-4">
+            <div className="text-base sm:text-xl text-slate-400 mt-2 sm:mt-4">
                 {formatDate(time)}
             </div>
         </div>
@@ -39,7 +39,6 @@ const TimerView: React.FC = () => {
 
     useEffect(() => {
         if (!audioRef.current) {
-            // A simple, valid beep sound
             const soundData = "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUQBEAAAAAAA//8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/";
             audioRef.current = new Audio(soundData);
         }
@@ -105,25 +104,25 @@ const TimerView: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center justify-center h-full text-white">
-            <div className={`text-7xl font-mono ${isFinished ? 'animate-pulse text-red-500' : ''}`}>
+            <div className={`text-4xl sm:text-7xl font-mono ${isFinished ? 'animate-pulse text-red-500' : ''}`}>
                 {formatTime(displayTime)}
             </div>
 
             {isFinished && <p className="mt-2 text-red-400">Time's up!</p>}
 
             {!isActive && timeLeft === 0 && (
-                <div className="flex gap-4 my-4">
-                    <input type="text" name="hours" value={timeInput.hours} onChange={handleInputChange} className="w-16 bg-slate-800 text-center text-lg p-1 rounded" placeholder="HH" />
-                    <input type="text" name="minutes" value={timeInput.minutes} onChange={handleInputChange} className="w-16 bg-slate-800 text-center text-lg p-1 rounded" placeholder="MM" />
-                    <input type="text" name="seconds" value={timeInput.seconds} onChange={handleInputChange} className="w-16 bg-slate-800 text-center text-lg p-1 rounded" placeholder="SS" />
+                <div className="flex gap-3 sm:gap-4 my-4">
+                    <input type="text" name="hours" value={timeInput.hours} onChange={handleInputChange} className="w-14 sm:w-16 bg-slate-800 text-center text-base sm:text-lg p-1 rounded" placeholder="HH" />
+                    <input type="text" name="minutes" value={timeInput.minutes} onChange={handleInputChange} className="w-14 sm:w-16 bg-slate-800 text-center text-base sm:text-lg p-1 rounded" placeholder="MM" />
+                    <input type="text" name="seconds" value={timeInput.seconds} onChange={handleInputChange} className="w-14 sm:w-16 bg-slate-800 text-center text-base sm:text-lg p-1 rounded" placeholder="SS" />
                 </div>
             )}
 
-            <div className="flex gap-4 mt-6">
-                <button onClick={handleStartPause} disabled={!timeIsSet && timeLeft === 0} className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-md disabled:bg-slate-600 disabled:cursor-not-allowed">
+            <div className="flex gap-3 sm:gap-4 mt-4 sm:mt-6">
+                <button onClick={handleStartPause} disabled={!timeIsSet && timeLeft === 0} className="px-5 sm:px-6 py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-md disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
                     {isActive ? 'Pause' : 'Start'}
                 </button>
-                <button onClick={handleReset} disabled={!timeIsSet && timeLeft === 0} className="px-6 py-2 bg-slate-600 hover:bg-slate-700 rounded-md disabled:bg-slate-600 disabled:cursor-not-allowed">
+                <button onClick={handleReset} disabled={!timeIsSet && timeLeft === 0} className="px-5 sm:px-6 py-2 bg-slate-600 hover:bg-slate-700 active:bg-slate-800 rounded-md disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors">
                     Reset
                 </button>
             </div>
@@ -134,10 +133,10 @@ const TimerView: React.FC = () => {
 const ClockApp: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'clock' | 'timer'>('clock');
 
-    const TabButton: React.FC<{tabName: 'clock' | 'timer', children: React.ReactNode}> = ({ tabName, children }) => (
+    const TabButton: React.FC<{ tabName: 'clock' | 'timer', children: React.ReactNode }> = ({ tabName, children }) => (
         <button
             onClick={() => setActiveTab(tabName)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === tabName ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors flex-1 sm:flex-none ${activeTab === tabName ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 active:bg-slate-700'}`}
         >
             {children}
         </button>
@@ -149,7 +148,7 @@ const ClockApp: React.FC = () => {
                 <TabButton tabName="clock">Clock</TabButton>
                 <TabButton tabName="timer">Timer</TabButton>
             </nav>
-            <main className="flex-1 flex items-center justify-center p-4 overflow-y-auto">
+            <main className="flex-1 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
                 {activeTab === 'clock' && <ClockView />}
                 {activeTab === 'timer' && <TimerView />}
             </main>
