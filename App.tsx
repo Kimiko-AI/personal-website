@@ -4,7 +4,7 @@ import Window from './components/Window';
 import Taskbar from './components/Taskbar';
 import ContextMenu, { ContextMenuAction } from './components/ContextMenu';
 import { APPS } from './appRegistry';
-import { ScreenshotIcon, SettingsIcon, WeatherIcon, TerminalIcon, NotesIcon, ClockIcon, ImageIcon, GamepadIcon } from './constants';
+import { ScreenshotIcon, SettingsIcon, WeatherIcon, TerminalIcon, NotesIcon, ClockIcon, ImageIcon, GamepadIcon, QRCodeIcon } from './constants';
 import { useWindowManager } from './hooks/useWindowManager';
 import { useDesktopBackground } from './hooks/useDesktopBackground';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -80,7 +80,8 @@ const App: React.FC = () => {
     { label: 'Open Notes', action: () => handleOpenApp('notes'), icon: <NotesIcon className="text-yellow-300" /> },
     { label: 'Open Clock', action: () => handleOpenApp('clock'), icon: <ClockIcon className="text-sky-300" /> },
     { label: 'Image Converter', action: () => handleOpenApp('imageConverter'), icon: <ImageIcon className="text-purple-400" /> },
-    { label: 'Tic Tac Toe', action: () => handleOpenApp('tictactoe'), icon: <GamepadIcon className="text-pink-400" /> },
+    { label: 'QR Generator', action: () => handleOpenApp('qrcode'), icon: <QRCodeIcon className="text-indigo-400" /> },
+    { label: 'Flappy Bird', action: () => handleOpenApp('flappybird'), icon: <GamepadIcon className="text-yellow-400" /> },
     { label: 'Snake', action: () => handleOpenApp('snake'), icon: <GamepadIcon className="text-green-500" /> },
   ];
 

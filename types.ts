@@ -1,6 +1,6 @@
 import type React from 'react';
 
-export type AppID = 'notes' | 'clock' | 'imageConverter' | 'settings' | 'weather' | 'terminal' | 'tictactoe' | 'snake';
+export type AppID = 'notes' | 'clock' | 'imageConverter' | 'settings' | 'weather' | 'terminal' | 'flappybird' | 'snake' | 'qrcode';
 
 export interface AppDefinition {
   id: AppID;
